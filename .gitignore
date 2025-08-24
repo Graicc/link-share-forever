@@ -1,0 +1,4 @@
+*.o
+linkshare
+database.db
+.vscode
