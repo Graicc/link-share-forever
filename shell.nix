@@ -1,7 +1,10 @@
+let
+  unstable = import <nixos-unstable> {};
+in
 { pkgs ? import <nixpkgs> {} }:
-pkgs.mkShell {
-  buildInputs = with pkgs; [
-    gcc
+pkgs.mkShellNoCC {
+  buildInputs = with unstable; [
+    gcc15
     openssl
     
     # C man pages
