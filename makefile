@@ -9,6 +9,8 @@ OBJS = $(SRCS:.c=.o)
 
 all: $(TARGET)
 
+main.o: index.html
+
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 

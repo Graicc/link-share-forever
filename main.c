@@ -1,6 +1,9 @@
 #include "sqlite3.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <netinet/in.h>
+#include <unistd.h>
 #include "openssl/sha.h"
 
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -52,13 +55,88 @@ int main()
     {
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);
-        return 1;
+        exit(1);
     }
 
     db_setup(db);
 
-    db_addUser(db, "graic", "password");
-    db_addUser(db, "graic2", "password2");
+    // db_addUser(db, "graic", "password");
+    // db_addUser(db, "graic2", "password2");
 
     sqlite3_close(db);
+
+    int server_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_fd < 0)
+    {
+        perror("Failed to initialize socket\n");
+        exit(1);
+    }
+
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &(int){1}, sizeof(int)) < 0)
+    {
+        perror("Failed to set sock opt\n");
+        exit(1);
+    }
+
+    struct sockaddr_in address;
+    address.sin_family = AF_INET;
+    address.sin_port = htons(3000);
+    address.sin_addr.s_addr = htonl(INADDR_ANY);
+
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
+    {
+        perror("Failed to bind socket\n");
+        exit(1);
+    }
+
+    int backlog_size = 10;
+    if (listen(server_fd, backlog_size) < 0)
+    {
+        perror("Failed to listen socket\n");
+        exit(1);
+    }
+
+    while (true)
+    {
+        printf("Waiting for connection\n");
+        int client_fd = accept(server_fd, NULL, NULL);
+        if (client_fd < 0)
+        {
+            perror("Failed to accept connection\n");
+            continue;
+        }
+
+        const int BUFFER_SIZE = 16000;
+        char buffer[BUFFER_SIZE];
+
+        ssize_t bytes_read = read(client_fd, &buffer, sizeof(buffer) - 1);
+        if (bytes_read < 0)
+        {
+            perror("Failed to read connection\n");
+            close(client_fd);
+            continue;
+        }
+
+        buffer[bytes_read] = 0; // Null terminate the string
+
+        printf(buffer);
+
+        const char *index = "GET / HTTP/1.1";
+        if (strncmp(index, buffer, sizeof(index) - 1) == 0)
+        {
+            printf("strcmp\n");
+            const char *header = "HTTP/1.1 200 OK\r\n"
+                "Content-Type: text/html; charset=UTF-8\r\n\r\n"
+                ;
+            write(client_fd, header, strlen(header));
+            const char message[] = {
+                #embed "index.html"
+            };
+
+            write(client_fd, message, strlen(message));
+
+        }
+
+        close(client_fd);
+    }
 }
