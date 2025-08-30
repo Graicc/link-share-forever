@@ -6,6 +6,7 @@ pkgs.mkShellNoCC {
   buildInputs = with unstable; [
     gcc15
     openssl
+    gdb
     
     # C man pages
     glibcInfo

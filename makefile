@@ -1,6 +1,6 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -O2
-LDFLAGS = -lcrypto
+CFLAGS = -Wall -Wextra -O2 -g
+LDFLAGS = -lcrypto -g
 
 TARGET = linkshare
 
