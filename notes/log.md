@@ -1,5 +1,10 @@
 # Logs
 
+## 2025-0828
+- Got forms working with parsing the resulting arguments
+- sizeof(char *) is 8 not the length of the string (obviously)
+- I miss wide pointers
+
 ## 2025-08-24
 - Got minimal HTTP server working
 - Returns index.html using #embed to statically link it

@@ -121,20 +121,132 @@ int main()
 
         printf(buffer);
 
-        const char *index = "GET / HTTP/1.1";
-        if (strncmp(index, buffer, sizeof(index) - 1) == 0)
+        const char *header = "HTTP/1.1 200 OK\r\n"
+                             "Content-Type: text/html; charset=UTF-8\r\n\r\n";
+
+        const char *index = "GET / HTTP/1.1\r\n";
+
+        const char *view = "GET /view/";
+        const char *suffix = " HTTP/1.1\r\n";
+
+        const char *indexPost = "POST / HTTP/1.1\r\n";
+
+        if (strncmp(buffer, index, strlen(index)) == 0)
         {
-            printf("strcmp\n");
-            const char *header = "HTTP/1.1 200 OK\r\n"
-                "Content-Type: text/html; charset=UTF-8\r\n\r\n"
-                ;
+            // /
             write(client_fd, header, strlen(header));
             const char message[] = {
                 #embed "index.html"
             };
 
             write(client_fd, message, strlen(message));
+        } else if (strncmp(buffer, indexPost, strlen(indexPost)) == 0) {
+            // POST /
+            // Used for submitting a new link
 
+            const char *doubleLineBreak = "\r\n\r\n";
+
+            const char *doubleLineBreakInBuffer = strstr(buffer, doubleLineBreak);
+
+            if (doubleLineBreakInBuffer == NULL) {
+                fprintf(stderr, "Post request with no body\n");
+                continue;
+            }
+
+            const char *body = doubleLineBreakInBuffer + strlen(doubleLineBreak);
+            
+            const char *feed_name_s = "feed_name";
+            const char *password_s = "password";
+            const char *feed_url_s = "feed_url";
+
+            const char *feed_name = NULL;
+            const char *password = NULL;
+            const char *feed_url = NULL;
+
+            const char *head = body;
+            while (true)
+            {
+                const char *equals = strchr(head, '=');
+                char *ampersand = strchrnul(head, '&');
+                if (equals == NULL) {
+                    break;
+                }
+
+                const char *key = head;
+                size_t keyLen = equals-head;
+
+                const char *value = equals + 1;
+                // size_t valueLen = ampersand - value;
+
+                if (strncmp(key, feed_name_s, keyLen) == 0) {
+                    feed_name = value;
+                }
+                else if (strncmp(key, password_s, keyLen) == 0) {
+                    password = value;
+                }
+                else if (strncmp(key, feed_url_s, keyLen) == 0) {
+                    feed_url = value;
+                }
+
+                if (ampersand[0] == '\0') {
+                    // We have reached the end of the string
+                    break;
+                }
+
+                ampersand[0] = '\0'; // Make the value null terminated
+
+                head = ampersand + 1;
+            }
+
+            if (feed_name == NULL || password == NULL || feed_url == NULL) {
+                fprintf(stderr, "Not all arguments provided\n");
+                fprintf(stderr, "%d", feed_name == NULL);
+                fprintf(stderr, "%d", password == NULL);
+                fprintf(stderr, "%d", feed_url == NULL);
+                continue;
+            }
+
+            printf("\n\nArguments: %s, %s, %s\n\n", feed_name, password, feed_url);
+
+            {
+                write(client_fd, header, strlen(header));
+                const char message[] = {
+                    #embed "index.html"
+                };
+
+                write(client_fd, message, strlen(message));
+            }
+        }
+        else if (strncmp(buffer, view, strlen(view)) == 0)
+        {
+            // /view/*
+            const char *space = strchr(buffer + sizeof(view) - 1, ' ');
+            if (space == NULL)
+            {
+                fprintf(stderr, "Space not found\n");
+                continue;
+            }
+
+            // Validate that the request ends with ' HTTP/1.1'
+            if (strncmp(space, suffix, strlen(suffix)) != 0)
+            {
+                fprintf(stderr, "Wrong suffix\n");
+                continue;
+            }
+
+            const char *subpage = buffer + strlen(view);
+            // size_t subpageLen = (size_t)(space - subpage);
+
+            const char *graic = "graic"; // TODO: temp, remove
+            if (strncmp(subpage, graic, strlen(graic)) == 0)
+            {
+                write(client_fd, header, strlen(header));
+                const char message[] = {
+                    #embed "view.html"
+                };
+
+                write(client_fd, message, strlen(message));
+            }
         }
 
         close(client_fd);
