@@ -4,49 +4,9 @@
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <unistd.h>
-#include "openssl/sha.h"
+#include <sys/socket.h>
 
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-static int callback(void *NotUsed, int argc, char **argv, char **azColName)
-{
-    int i;
-    for (i = 0; i < argc; i++)
-    {
-        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-    }
-    printf("\n");
-    return 0;
-}
-
-int db_setup(sqlite3 *db)
-{
-    char *createFeedTable = "CREATE TABLE IF NOT EXISTS users (name TEXT UNIQUE PRIMARY KEY, password CHAR(32), lastUpdate DATETIME);";
-
-    char *zErrMsg = 0;
-    int res = sqlite3_exec(db, createFeedTable, callback, 0, &zErrMsg);
-    if (res != SQLITE_OK)
-    {
-        fprintf(stderr, "SQL error: %s\n", zErrMsg);
-        sqlite3_free(zErrMsg);
-    }
-
-    return res;
-}
-
-int db_addUser(sqlite3 *db, char *username, char *plaintextPassword)
-{
-    const char *SALT = "linksharesalt";
-
-    char saltedPassword[256];
-    snprintf(saltedPassword, sizeof(saltedPassword), "%s%s", plaintextPassword, SALT);
-
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-    SHA256((unsigned char *)saltedPassword, strlen(saltedPassword), hash);
-
-    // TODO: Implement
-
-    return 0;
-}
+#include "db.h"
 
 int main()
 {
@@ -64,6 +24,8 @@ int main()
     // db_addUser(db, "graic2", "password2");
 
     sqlite3_close(db);
+
+    return 0;
 
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd < 0)
@@ -136,11 +98,13 @@ int main()
             // /
             write(client_fd, header, strlen(header));
             const char message[] = {
-                #embed "index.html"
+#embed "../pages/index.html"
             };
 
             write(client_fd, message, strlen(message));
-        } else if (strncmp(buffer, indexPost, strlen(indexPost)) == 0) {
+        }
+        else if (strncmp(buffer, indexPost, strlen(indexPost)) == 0)
+        {
             // POST /
             // Used for submitting a new link
 
@@ -148,13 +112,14 @@ int main()
 
             const char *doubleLineBreakInBuffer = strstr(buffer, doubleLineBreak);
 
-            if (doubleLineBreakInBuffer == NULL) {
+            if (doubleLineBreakInBuffer == NULL)
+            {
                 fprintf(stderr, "Post request with no body\n");
                 continue;
             }
 
             const char *body = doubleLineBreakInBuffer + strlen(doubleLineBreak);
-            
+
             const char *feed_name_s = "feed_name";
             const char *password_s = "password";
             const char *feed_url_s = "feed_url";
@@ -168,27 +133,32 @@ int main()
             {
                 const char *equals = strchr(head, '=');
                 char *ampersand = strchrnul(head, '&');
-                if (equals == NULL) {
+                if (equals == NULL)
+                {
                     break;
                 }
 
                 const char *key = head;
-                size_t keyLen = equals-head;
+                size_t keyLen = equals - head;
 
                 const char *value = equals + 1;
                 // size_t valueLen = ampersand - value;
 
-                if (strncmp(key, feed_name_s, keyLen) == 0) {
+                if (strncmp(key, feed_name_s, keyLen) == 0)
+                {
                     feed_name = value;
                 }
-                else if (strncmp(key, password_s, keyLen) == 0) {
+                else if (strncmp(key, password_s, keyLen) == 0)
+                {
                     password = value;
                 }
-                else if (strncmp(key, feed_url_s, keyLen) == 0) {
+                else if (strncmp(key, feed_url_s, keyLen) == 0)
+                {
                     feed_url = value;
                 }
 
-                if (ampersand[0] == '\0') {
+                if (ampersand[0] == '\0')
+                {
                     // We have reached the end of the string
                     break;
                 }
@@ -198,7 +168,8 @@ int main()
                 head = ampersand + 1;
             }
 
-            if (feed_name == NULL || password == NULL || feed_url == NULL) {
+            if (feed_name == NULL || password == NULL || feed_url == NULL)
+            {
                 fprintf(stderr, "Not all arguments provided\n");
                 fprintf(stderr, "%d", feed_name == NULL);
                 fprintf(stderr, "%d", password == NULL);
@@ -211,7 +182,7 @@ int main()
             {
                 write(client_fd, header, strlen(header));
                 const char message[] = {
-                    #embed "index.html"
+#embed "../pages/index.html"
                 };
 
                 write(client_fd, message, strlen(message));
@@ -242,7 +213,7 @@ int main()
             {
                 write(client_fd, header, strlen(header));
                 const char message[] = {
-                    #embed "view.html"
+#embed "../pages/view.html"
                 };
 
                 write(client_fd, message, strlen(message));
