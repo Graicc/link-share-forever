@@ -58,7 +58,7 @@ int main()
         exit(1);
     }
 
-    while (true)
+    while (1)
     {
         printf("Waiting for connection\n");
         int client_fd = accept(server_fd, NULL, NULL);
@@ -71,7 +71,7 @@ int main()
         const int BUFFER_SIZE = 16000;
         char buffer[BUFFER_SIZE];
 
-        ssize_t bytes_read = read(client_fd, &buffer, sizeof(buffer) - 1);
+        size_t bytes_read = read(client_fd, &buffer, sizeof(buffer) - 1);
         if (bytes_read < 0)
         {
             perror("Failed to read connection\n");

@@ -1,6 +1,12 @@
 # Logs
 
-## 2025-0828
+## 2025-08-30
+- Got main db mutation functions working: creating feeds and inserting into feeds
+- Finally refactored project to sort things into directories (src, sql, pages)
+- Updated the makefile to refresh on .html and .sql changes
+  - Still "need" to make it recompile on header changes
+
+## 2025-08-28
 - Got forms working with parsing the resulting arguments
 - sizeof(char *) is 8 not the length of the string (obviously)
 - I miss wide pointers
