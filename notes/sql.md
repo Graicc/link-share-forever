@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS feeds (
 );
 
 INSERT INTO feeds (name, password, last_updated)
-VALUES ('graic', 'password', julianday('now'));
+VALUES ('Graic', 'password', julianday('now'));
 
 INSERT INTO feeds (name, password, last_updated)
 VALUES ('other', 'password', julianday('2020-01-01T10:30:00'));
@@ -39,7 +39,7 @@ CREATE INDEX IF NOT EXISTS idx_links_owner_date
 INSERT INTO links (title, url, description, date, image, owner_id)
 SELECT 'Title', 'URL', 'Desc', julianday('2020-01-01T10:30:00'), NULL, feeds.id
 FROM feeds
-WHERE feeds.name == 'graic' AND feeds.password == 'password';
+WHERE feeds.name == 'Graic' AND feeds.password == 'password';
 
 INSERT INTO links(title, url, description, date, image, owner_id)
 SELECT 'Title2', 'URL2', 'Desc2', julianday('now'), NULL, f.id

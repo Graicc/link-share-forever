@@ -1,5 +1,13 @@
 # Logs
 
+## 2025-09-01
+- Database get feed working (mostly, no dates yet)
+- Added barebones /view/[name] page to show data
+  - techincally RSS feed is higher priority but this is easier to test
+- Starting porting the pages to pg.c
+  - Ported index over using pg_splitString to have a layout page
+- Largest unkown now is getting all of the info from just the link
+
 ## 2025-08-30
 - Got main db mutation functions working: creating feeds and inserting into feeds
 - Finally refactored project to sort things into directories (src, sql, pages)

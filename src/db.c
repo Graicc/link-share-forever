@@ -12,11 +12,17 @@ const char S_ADD_FEED[] = {
     #embed "../sql/add_feed.sql"
 };
 
+const char S_GET_FEED[] = {
+    #embed "../sql/get_feed.sql"
+};
+
 const char S_ADD_LINK[] = {
     #embed "../sql/add_link.sql"
 };
 
 sqlite3_stmt *addFeedStmt = NULL;
+sqlite3_stmt *getFeedStmt = NULL;
+
 sqlite3_stmt *addLinkStmt = NULL;
 
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -31,7 +37,7 @@ static int callback(void *NotUsed, int argc, char **argv, char **azColName)
     return 0;
 }
 
-int db_setup(sqlite3 *db)
+int db_init(sqlite3 *db)
 {
     char *zErrMsg = 0;
     int res = sqlite3_exec(db, S_INIT, callback, 0, &zErrMsg);
@@ -42,19 +48,29 @@ int db_setup(sqlite3 *db)
     }
 
     sqlite3_prepare_v2(db, S_ADD_FEED, sizeof(S_ADD_FEED), &addFeedStmt, NULL);
+    sqlite3_prepare_v2(db, S_GET_FEED, sizeof(S_GET_FEED), &getFeedStmt, NULL);
     sqlite3_prepare_v2(db, S_ADD_LINK, sizeof(S_ADD_LINK), &addLinkStmt, NULL);
 
-    db_addFeed(db, "graic", "hunter2");
-    db_addFeed(db, "graic2", "hunter2");
+    // TODO: remove temporary data
 
-    link post = {
-        .title = "TITLE",
-        .url = "URL",
-        .desc = "DESC",
+    db_addFeed(db, "Graic", "hunter2");
+    db_addFeed(db, "Graic2", "hunter2");
+
+    db_link post = {
+        .title = "Graic Blog",
+        .url = "https://graic.net",
+        .desc = "Description for graic.net",
         .image = NULL,
     };
-    db_addLink(db, "graic", "hunter2", &post);
-    db_addLink(db, "graic2", "hunter2", &post);
+    db_addLink(db, "Graic", "hunter2", &post);
+    db_link post2 = {
+        .title = "Callan",
+        .url = "https://callan101.com",
+        .desc = "Description",
+        .image = NULL,
+    };
+    db_addLink(db, "Graic", "hunter2", &post2);
+    db_addLink(db, "Graic2", "hunter2", &post);
 
     return res;
 }
@@ -90,7 +106,7 @@ int db_addFeed(sqlite3 *db, char *name, char *plaintextPassword)
     return 0;
 }
 
-int db_addLink(sqlite3 *db, char *name, char *plaintextPassword, const link *info) {
+int db_addLink(sqlite3 *db, char *name, char *plaintextPassword, const db_link *info) {
     unsigned char hash[SHA256_DIGEST_LENGTH + 1];
     db_hash(plaintextPassword, hash);
 
@@ -110,6 +126,34 @@ int db_addLink(sqlite3 *db, char *name, char *plaintextPassword, const link *inf
 
     int res = sqlite3_step(addLinkStmt);
     if (res != SQLITE_DONE) {
+        fprintf(stderr, "Can't step: %s\n", sqlite3_errmsg(db));
+        printf("\n!!%d", res);
+        return 1;
+    }
+
+    return 0;
+}
+
+int db_getFeed(sqlite3 *db, const char *name) {
+    sqlite3_reset(getFeedStmt);
+
+    sqlite3_bind_text(getFeedStmt, 1, name, strlen(name), SQLITE_TRANSIENT);
+
+    return 0;
+}
+
+int db_stepGetFeed(sqlite3 *db, db_link *link) {
+    int res = sqlite3_step(getFeedStmt);
+    if (res == SQLITE_DONE) {
+        return 1;
+    } else if (res == SQLITE_ROW) {
+        link->title = (const char*)sqlite3_column_text(getFeedStmt, 0);
+        link->url = (const char*)sqlite3_column_text(getFeedStmt, 1);
+        link->desc = (const char*)sqlite3_column_text(getFeedStmt, 2);
+        // TODO
+        // link->date = (const char*)sqlite3_column_text(getFeedStmt, 3);
+        link->image = (const char*)sqlite3_column_text(getFeedStmt, 4);
+    } else {
         fprintf(stderr, "Can't step: %s\n", sqlite3_errmsg(db));
         printf("\n!!%d", res);
         return 1;

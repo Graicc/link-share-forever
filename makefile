@@ -4,12 +4,13 @@ LDFLAGS = -lcrypto -g
 
 TARGET = linkshare
 
-SRCS = src/*.c
+SRCS = src/db.c src/main.c src/pg.c src/sqlite3.c
 OBJS = $(SRCS:.c=.o)
 
 all: $(TARGET)
 
 src/main.o: pages/*.html
+src/pg.o: pages/*.html
 
 src/db.o: sql/*.sql
 

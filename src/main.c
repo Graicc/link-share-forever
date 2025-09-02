@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 
 #include "db.h"
+#include "pg.h"
 
 int main()
 {
@@ -18,14 +19,7 @@ int main()
         exit(1);
     }
 
-    db_setup(db);
-
-    // db_addUser(db, "graic", "password");
-    // db_addUser(db, "graic2", "password2");
-
-    sqlite3_close(db);
-
-    return 0;
+    db_init(db);
 
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd < 0)
@@ -60,7 +54,7 @@ int main()
 
     while (1)
     {
-        printf("Waiting for connection\n");
+        // printf("Waiting for connection\n");
         int client_fd = accept(server_fd, NULL, NULL);
         if (client_fd < 0)
         {
@@ -71,7 +65,7 @@ int main()
         const int BUFFER_SIZE = 16000;
         char buffer[BUFFER_SIZE];
 
-        size_t bytes_read = read(client_fd, &buffer, sizeof(buffer) - 1);
+        ssize_t bytes_read = read(client_fd, &buffer, sizeof(buffer) - 1);
         if (bytes_read < 0)
         {
             perror("Failed to read connection\n");
@@ -81,7 +75,7 @@ int main()
 
         buffer[bytes_read] = 0; // Null terminate the string
 
-        printf(buffer);
+        // printf(buffer);
 
         const char *header = "HTTP/1.1 200 OK\r\n"
                              "Content-Type: text/html; charset=UTF-8\r\n\r\n";
@@ -95,13 +89,7 @@ int main()
 
         if (strncmp(buffer, index, strlen(index)) == 0)
         {
-            // /
-            write(client_fd, header, strlen(header));
-            const char message[] = {
-#embed "../pages/index.html"
-            };
-
-            write(client_fd, message, strlen(message));
+            pg_index(client_fd);
         }
         else if (strncmp(buffer, indexPost, strlen(indexPost)) == 0)
         {
@@ -179,14 +167,7 @@ int main()
 
             printf("\n\nArguments: %s, %s, %s\n\n", feed_name, password, feed_url);
 
-            {
-                write(client_fd, header, strlen(header));
-                const char message[] = {
-#embed "../pages/index.html"
-                };
-
-                write(client_fd, message, strlen(message));
-            }
+            pg_index(client_fd);
         }
         else if (strncmp(buffer, view, strlen(view)) == 0)
         {
@@ -205,21 +186,18 @@ int main()
                 continue;
             }
 
-            const char *subpage = buffer + strlen(view);
-            // size_t subpageLen = (size_t)(space - subpage);
+            char *subpage = buffer + strlen(view);
+            size_t subpageLen = (size_t)(space - subpage);
+            subpage[subpageLen] = '\0';
 
-            const char *graic = "graic"; // TODO: temp, remove
-            if (strncmp(subpage, graic, strlen(graic)) == 0)
-            {
-                write(client_fd, header, strlen(header));
-                const char message[] = {
-#embed "../pages/view.html"
-                };
-
-                write(client_fd, message, strlen(message));
-            }
+            pg_view(client_fd, subpage, db);
         }
 
         close(client_fd);
     }
+
+    sqlite3_close(db);
+
+    return 0;
+
 }
