@@ -14,4 +14,4 @@ int pg_splitString(const char *str, splitString *out);
 
 int pg_index(int stream_fd);
 
-int pg_view(int stream_fd, const char* name, sqlite3 *db);
+int pg_view(int stream_fd, const char *name, sqlite3 *db);
