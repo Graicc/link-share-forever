@@ -1,10 +1,10 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -O2 -g
-LDFLAGS = -lcrypto -g
+CFLAGS = -Wall -Wextra -O2 -g 
+LDFLAGS = -lcrypto -lcurl -g
 
 TARGET = linkshare
 
-SRCS = src/db.c src/main.c src/pg.c src/sqlite3.c
+SRCS = src/db.c src/main.c src/pg.c src/sqlite3.c src/md.c
 OBJS = $(SRCS:.c=.o)
 
 all: $(TARGET)

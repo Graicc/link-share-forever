@@ -7,9 +7,15 @@
 #include <unistd.h>
 
 #include "db.h"
+#include "md.h"
 #include "pg.h"
 
 int main() {
+  md_init();
+  db_link out = {0};
+  md_getMetadata("https://graic.net/p/left-to-right-programming", &out);
+  return 0;
+
   sqlite3 *db;
   if (sqlite3_open("database.db", &db)) {
     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
@@ -69,9 +75,6 @@ int main() {
 
     // printf(buffer);
 
-    const char *header = "HTTP/1.1 200 OK\r\n"
-                         "Content-Type: text/html; charset=UTF-8\r\n\r\n";
-
     const char *index = "GET / HTTP/1.1\r\n";
 
     const char *view = "GET /view/";
@@ -85,22 +88,11 @@ int main() {
       // POST /
       // Used for submitting a new link
 
-      const char *doubleLineBreak = "\r\n\r\n";
-
-      const char *doubleLineBreakInBuffer = strstr(buffer, doubleLineBreak);
-
-      if (doubleLineBreakInBuffer == NULL) {
-        fprintf(stderr, "Post request with no body\n");
-        continue;
-      }
-
-      const char *body = doubleLineBreakInBuffer + strlen(doubleLineBreak);
-
       const char *feed_name = NULL;
       const char *password = NULL;
       const char *feed_url = NULL;
 
-      if (pg_parseForm(body, "feed_name", &feed_name, "password", &password,
+      if (pg_parseForm(buffer, "feed_name", &feed_name, "password", &password,
                        "feed_url", &feed_url) != 0) {
         fprintf(stderr, "Not all arguments provided: %d %d %d\n",
                 feed_name == NULL, password == NULL, feed_url == NULL);

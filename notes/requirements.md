@@ -9,6 +9,7 @@ P1
 - HTTP feed for pages
 
 P2
+- Better youtube support
 - Remove items from feed
 - Looks good
 - Caching

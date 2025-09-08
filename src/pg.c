@@ -1,6 +1,7 @@
 #include "pg.h"
 
 #include "db.h"
+#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -73,9 +74,25 @@ int pg_view(int stream_fd, const char *name, sqlite3 *db) {
   return 0;
 }
 
-int pg_parseForm(const char *body, const char *key1, const char **outVal1,
+int pg_parseForm(const char *response, const char *key1, const char **outVal1,
                  const char *key2, const char **outVal2, const char *key3,
                  const char **outVal3) {
+  const char *doubleLineBreak = "\r\n\r\n";
+
+  const char *doubleLineBreakInBuffer = strstr(response, doubleLineBreak);
+
+  if (doubleLineBreakInBuffer == NULL) {
+    fprintf(stderr, "Post request with no body\n");
+    return 1;
+  }
+
+  const char *body = doubleLineBreakInBuffer + strlen(doubleLineBreak);
+  return pg_parseFormBody(body, key1, outVal1, key2, outVal2, key3, outVal3);
+}
+
+int pg_parseFormBody(const char *body, const char *key1, const char **outVal1,
+                     const char *key2, const char **outVal2, const char *key3,
+                     const char **outVal3) {
   // This could be a varadic function, but that would be complexity that isn't
   // neccessary, since we know we won't ever need more than 3 args
 
