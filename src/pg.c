@@ -72,3 +72,55 @@ int pg_view(int stream_fd, const char *name, sqlite3 *db) {
 
   return 0;
 }
+
+int pg_parseForm(const char *body, const char *key1, const char **outVal1,
+                 const char *key2, const char **outVal2, const char *key3,
+                 const char **outVal3) {
+  // This could be a varadic function, but that would be complexity that isn't
+  // neccessary, since we know we won't ever need more than 3 args
+
+  *outVal1 = NULL;
+  *outVal2 = NULL;
+  *outVal3 = NULL;
+
+  const char *head = body;
+  while (1) {
+    const char *equals = strchr(head, '=');
+    char *ampersand = strchrnul(head, '&');
+    if (equals == NULL) {
+      break;
+    }
+
+    const char *key = head;
+    size_t keyLen = equals - head;
+
+    const char *value = equals + 1;
+    // size_t valueLen = ampersand - value;
+
+    if (key1 != NULL && strncmp(key, key1, keyLen) == 0) {
+      *outVal1 = value;
+    } else if (key2 != NULL && strncmp(key, key2, keyLen) == 0) {
+      *outVal2 = value;
+    } else if (key3 != NULL && strncmp(key, key3, keyLen) == 0) {
+      *outVal3 = value;
+    }
+
+    if (ampersand[0] == '\0') {
+      // We have reached the end of the string
+      break;
+    }
+
+    ampersand[0] = '\0'; // Make the value null terminated
+
+    head = ampersand + 1;
+  }
+
+  // Make sure all asked for keys are present
+  if ((key1 != NULL && *outVal1 == NULL) ||
+      (key2 != NULL && *outVal2 == NULL) ||
+      (key3 != NULL && *outVal3 == NULL)) {
+    return 1;
+  }
+
+  return 0;
+}

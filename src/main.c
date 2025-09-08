@@ -6,7 +6,6 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-
 #include "db.h"
 #include "pg.h"
 
@@ -49,7 +48,7 @@ int main() {
   }
 
   while (1) {
-    // printf("Waiting for connection\n");
+    printf("Waiting for connection\n");
     int client_fd = accept(server_fd, NULL, NULL);
     if (client_fd < 0) {
       perror("Failed to accept connection\n");
@@ -97,51 +96,14 @@ int main() {
 
       const char *body = doubleLineBreakInBuffer + strlen(doubleLineBreak);
 
-      const char *feed_name_s = "feed_name";
-      const char *password_s = "password";
-      const char *feed_url_s = "feed_url";
-
       const char *feed_name = NULL;
       const char *password = NULL;
       const char *feed_url = NULL;
 
-      const char *head = body;
-      while (true) {
-        const char *equals = strchr(head, '=');
-        char *ampersand = strchrnul(head, '&');
-        if (equals == NULL) {
-          break;
-        }
-
-        const char *key = head;
-        size_t keyLen = equals - head;
-
-        const char *value = equals + 1;
-        // size_t valueLen = ampersand - value;
-
-        if (strncmp(key, feed_name_s, keyLen) == 0) {
-          feed_name = value;
-        } else if (strncmp(key, password_s, keyLen) == 0) {
-          password = value;
-        } else if (strncmp(key, feed_url_s, keyLen) == 0) {
-          feed_url = value;
-        }
-
-        if (ampersand[0] == '\0') {
-          // We have reached the end of the string
-          break;
-        }
-
-        ampersand[0] = '\0'; // Make the value null terminated
-
-        head = ampersand + 1;
-      }
-
-      if (feed_name == NULL || password == NULL || feed_url == NULL) {
-        fprintf(stderr, "Not all arguments provided\n");
-        fprintf(stderr, "%d", feed_name == NULL);
-        fprintf(stderr, "%d", password == NULL);
-        fprintf(stderr, "%d", feed_url == NULL);
+      if (pg_parseForm(body, "feed_name", &feed_name, "password", &password,
+                       "feed_url", &feed_url) != 0) {
+        fprintf(stderr, "Not all arguments provided: %d %d %d\n",
+                feed_name == NULL, password == NULL, feed_url == NULL);
         continue;
       }
 
