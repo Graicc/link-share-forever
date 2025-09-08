@@ -41,7 +41,7 @@ int pg_splitString(const char *str, splitString *out) {
   return 0;
 }
 
-int pg_index(int stream_fd) {
+int pg_pageIndex(int stream_fd) {
   write(stream_fd, HEADER, sizeof(HEADER));
   write(stream_fd, LAYOUT_PAGE.before, LAYOUT_PAGE.beforeLen);
 
@@ -52,7 +52,7 @@ int pg_index(int stream_fd) {
   return 0;
 }
 
-int pg_view(int stream_fd, const char *name, sqlite3 *db) {
+int pg_pageView(int stream_fd, const char *name, sqlite3 *db) {
   write(stream_fd, HEADER, sizeof(HEADER));
   write(stream_fd, LAYOUT_PAGE.before, LAYOUT_PAGE.beforeLen);
 
@@ -64,9 +64,12 @@ int pg_view(int stream_fd, const char *name, sqlite3 *db) {
     write_str(stream_fd, link.url);
     write_str(stream_fd, "\"> <h2>");
     write_str(stream_fd, link.title);
-    write_str(stream_fd, "</h2></a> <p>");
-    write_str(stream_fd, link.desc);
-    write_str(stream_fd, "</p>");
+    write_str(stream_fd, "</h2></a>");
+    if (link.desc != NULL) {
+      write_str(stream_fd, "<p>");
+      write_str(stream_fd, link.desc);
+      write_str(stream_fd, "</p>");
+    }
   }
 
   write(stream_fd, LAYOUT_PAGE.after, LAYOUT_PAGE.afterLen);

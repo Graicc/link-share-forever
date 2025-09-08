@@ -9,9 +9,9 @@ typedef struct db_link {
 
 int db_init(sqlite3 *db);
 
-int db_addFeed(sqlite3 *db, char *name, char *plaintextPassword);
+int db_addFeed(sqlite3 *db, const char *name, const char *plaintextPassword);
 
-int db_addLink(sqlite3 *db, char *name, char *plaintextPassword,
+int db_addLink(sqlite3 *db, const char *name, const char *plaintextPassword,
                const db_link *info);
 
 int db_getFeed(sqlite3 *db, const char *name);

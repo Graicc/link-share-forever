@@ -1,5 +1,13 @@
 # Logs
 
+## 2025-09-07
+Got end to end flow working! You can now add links!
+- Moved form parsing to pg.c
+- URL decode for form param
+- Get metadata for url. Parses title, description, image
+- Form on index.html adds it to the database
+Still need to add the ability to create accounts, rss view (needs dates), and rate limiting. But thats all that's left for v0.1! *should* be able to get v0.1 out this week.
+
 ## 2025-09-01
 - Database get feed working (mostly, no dates yet)
 - Added barebones /view/[name] page to show data

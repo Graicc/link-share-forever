@@ -12,9 +12,9 @@ int pg_init();
 
 int pg_splitString(const char *str, splitString *out);
 
-int pg_index(int stream_fd);
+int pg_pageIndex(int stream_fd);
 
-int pg_view(int stream_fd, const char *name, sqlite3 *db);
+int pg_pageView(int stream_fd, const char *name, sqlite3 *db);
 
 int pg_parseForm(const char *response, const char *key1, const char **outVal1,
                  const char *key2, const char **outVal2, const char *key3,

@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS links (
   id INTEGER PRIMARY KEY,
   title text NOT NULL,
   url text NOT NULL,
-  description text NOT NULL,
+  description text,
   date real NOT NULL,
   image text,
 

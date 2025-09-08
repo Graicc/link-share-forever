@@ -12,9 +12,6 @@
 
 int main() {
   md_init();
-  db_link out = {0};
-  md_getMetadata("https://graic.net/p/left-to-right-programming", &out);
-  return 0;
 
   sqlite3 *db;
   if (sqlite3_open("database.db", &db)) {
@@ -83,7 +80,7 @@ int main() {
     const char *indexPost = "POST / HTTP/1.1\r\n";
 
     if (strncmp(buffer, index, strlen(index)) == 0) {
-      pg_index(client_fd);
+      pg_pageIndex(client_fd);
     } else if (strncmp(buffer, indexPost, strlen(indexPost)) == 0) {
       // POST /
       // Used for submitting a new link
@@ -101,7 +98,24 @@ int main() {
 
       printf("\n\nArguments: %s, %s, %s\n\n", feed_name, password, feed_url);
 
-      pg_index(client_fd);
+      char *url = md_decodeURL(feed_url);
+      db_link info = {.url = url};
+      if (md_getMetadata(&info) != 0) {
+        fprintf(stderr, "Failure to get metadata");
+        continue;
+      }
+
+      if (db_addLink(db, feed_name, password, &info) != 0) {
+        fprintf(stderr, "Failure to add link");
+        continue;
+      }
+
+      free(info.title);
+      free(info.url);
+      free(info.desc);
+      free(info.image);
+
+      pg_pageIndex(client_fd);
     } else if (strncmp(buffer, view, strlen(view)) == 0) {
       // /view/*
       const char *space = strchr(buffer + sizeof(view) - 1, ' ');
@@ -120,7 +134,7 @@ int main() {
       size_t subpageLen = (size_t)(space - subpage);
       subpage[subpageLen] = '\0';
 
-      pg_view(client_fd, subpage, db);
+      pg_pageView(client_fd, subpage, db);
     }
 
     close(client_fd);

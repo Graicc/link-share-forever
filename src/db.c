@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <string.h>
 
-
 const char S_INIT[] = {
 #embed "../sql/init.sql"
 };
@@ -53,21 +52,21 @@ int db_init(sqlite3 *db) {
   db_addFeed(db, "Graic", "hunter2");
   db_addFeed(db, "Graic2", "hunter2");
 
-  db_link post = {
-      .title = "Graic Blog",
-      .url = "https://graic.net",
-      .desc = "Description for graic.net",
-      .image = NULL,
-  };
-  db_addLink(db, "Graic", "hunter2", &post);
-  db_link post2 = {
-      .title = "Callan",
-      .url = "https://callan101.com",
-      .desc = "Description",
-      .image = NULL,
-  };
-  db_addLink(db, "Graic", "hunter2", &post2);
-  db_addLink(db, "Graic2", "hunter2", &post);
+  // db_link post = {
+  //     .title = "Graic Blog",
+  //     .url = "https://graic.net",
+  //     .desc = "Description for graic.net",
+  //     .image = NULL,
+  // };
+  // db_addLink(db, "Graic", "hunter2", &post);
+  // db_link post2 = {
+  //     .title = "Callan",
+  //     .url = "https://callan101.com",
+  //     .desc = "Description",
+  //     .image = NULL,
+  // };
+  // db_addLink(db, "Graic", "hunter2", &post2);
+  // db_addLink(db, "Graic2", "hunter2", &post);
 
   return res;
 }
@@ -86,7 +85,7 @@ void db_hash(const char *plaintextPassword,
   hash[SHA256_DIGEST_LENGTH] = 0;
 }
 
-int db_addFeed(sqlite3 *db, char *name, char *plaintextPassword) {
+int db_addFeed(sqlite3 *db, const char *name, const char *plaintextPassword) {
   unsigned char hash[SHA256_DIGEST_LENGTH + 1];
   db_hash(plaintextPassword, hash);
 
@@ -106,8 +105,14 @@ int db_addFeed(sqlite3 *db, char *name, char *plaintextPassword) {
   return 0;
 }
 
-int db_addLink(sqlite3 *db, char *name, char *plaintextPassword,
+int db_addLink(sqlite3 *db, const char *name, const char *plaintextPassword,
                const db_link *info) {
+  if (name == NULL || plaintextPassword == NULL || info->title == NULL ||
+      info->url == NULL) {
+    fprintf(stderr, "Can't add null link");
+    return 1;
+  }
+
   unsigned char hash[SHA256_DIGEST_LENGTH + 1];
   db_hash(plaintextPassword, hash);
 
@@ -117,8 +122,12 @@ int db_addLink(sqlite3 *db, char *name, char *plaintextPassword,
                     SQLITE_TRANSIENT);
   sqlite3_bind_text(addLinkStmt, 2, info->url, strlen(info->url),
                     SQLITE_TRANSIENT);
-  sqlite3_bind_text(addLinkStmt, 3, info->desc, strlen(info->desc),
-                    SQLITE_TRANSIENT);
+  if (info->desc == NULL) {
+    sqlite3_bind_null(addLinkStmt, 3);
+  } else {
+    sqlite3_bind_text(addLinkStmt, 3, info->desc, strlen(info->desc),
+                      SQLITE_TRANSIENT);
+  }
   if (info->image == NULL) {
     sqlite3_bind_null(addLinkStmt, 4);
   } else {

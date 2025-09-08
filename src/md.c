@@ -2,6 +2,7 @@
 
 #include <ctype.h>
 #include <curl/curl.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -71,7 +72,6 @@ char *md_getInside(const char *data, const char *left, const char *right) {
 int md_getMetadataFromResponse(const md_curlResponse *response,
                                db_link *outMetadata) {
   outMetadata->title = NULL;
-  outMetadata->url = NULL;
   outMetadata->desc = NULL;
   outMetadata->image = NULL;
 
@@ -123,7 +123,54 @@ int md_init() {
   return 0;
 }
 
-int md_getMetadata(const char *url, db_link *outMetadata) {
+char *md_decodeURL(const char *url) {
+  size_t len = strlen(url);
+
+  size_t new_len = len + 1;
+
+  // Handle urls not prefixed with http(s)://
+  bool needsHTTP = false;
+  const char *httpPrefix = "http://";
+  if (strncmp("http", url, strlen("http")) != 0) {
+    new_len += strlen(httpPrefix);
+    needsHTTP = true;
+  }
+
+  char *out = malloc(new_len);
+  if (!out) {
+    fprintf(stderr, "Ran out of memory\n");
+    return NULL;
+  }
+
+  char *curr = out;
+  if (needsHTTP) {
+    strcpy(out, httpPrefix);
+    curr += strlen(httpPrefix);
+  }
+
+  for (size_t i = 0; i < len; i++) {
+    char u = url[i];
+    if (u == '%' && i < len - 2) {
+      if (isxdigit(url[i + 1]) && isxdigit(url[i + 2])) {
+        int value;
+        sscanf(&url[i + 1], "%2x", &value);
+        *curr = (char)value;
+        curr++;
+        i += 2;
+      }
+    } else if (u == '+') {
+      *curr = ' ';
+      curr++;
+    } else {
+      *curr = u;
+      curr++;
+    }
+  }
+  *curr = '\0';
+  return out;
+}
+
+int md_getMetadata(db_link *outMetadata) {
   if (!curl) {
     fprintf(stderr, "Curl does not exist\n");
     return 1;
@@ -131,9 +178,10 @@ int md_getMetadata(const char *url, db_link *outMetadata) {
 
   md_curlResponse response = {0};
 
-  curl_easy_setopt(curl, CURLOPT_URL, url);
+  curl_easy_setopt(curl, CURLOPT_URL, outMetadata->url);
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, md_write_callback);
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+  curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 
   CURLcode res = curl_easy_perform(curl);
 
@@ -147,8 +195,7 @@ int md_getMetadata(const char *url, db_link *outMetadata) {
   // We only want to run this at the end of the program
   // curl_easy_cleanup(curl);
 
-  printf("Data for URL: %s\n", url);
-  outMetadata->url = url;
+  printf("Data for URL: %s\n", outMetadata->url);
   int parseRes = md_getMetadataFromResponse(&response, outMetadata);
 
   free(response.data);
