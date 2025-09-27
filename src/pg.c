@@ -3,17 +3,25 @@
 #include "db.h"
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 #define write_str(buffer, string) write(buffer, string, strlen(string))
 
-const char HEADER[] = "HTTP/1.1 200 OK\r\n"
-                      "Content-Type: text/html; charset=UTF-8\r\n\r\n";
+const char HTML_HEADER[] = "HTTP/1.1 200 OK\r\n"
+                           "Content-Type: text/html; charset=UTF-8\r\n\r\n";
+const char RSS_HEADER[] = "HTTP/1.1 200 OK\r\n"
+                          "Content-Type: application/rss+xml\r\n\r\n";
 
 const char S_LAYOUT_PAGE[] = {
 #embed "../pages/layout.html"
     , '\0'};
 splitString LAYOUT_PAGE = {};
+
+const char S_RSS_OUTLINE[] = {
+#embed "../pages/rss_outline.xml"
+};
+splitString RSS_OUTLINE = {};
 
 const char S_INDEX_PAGE[] = {
 #embed "../pages/index.html"
@@ -23,6 +31,7 @@ const char *TARGET = "{{}}";
 
 int pg_init() {
   pg_splitString(S_LAYOUT_PAGE, &LAYOUT_PAGE);
+  pg_splitString(S_RSS_OUTLINE, &RSS_OUTLINE);
 
   return 0;
 }
@@ -42,10 +51,10 @@ int pg_splitString(const char *str, splitString *out) {
 }
 
 int pg_pageIndex(int stream_fd) {
-  write(stream_fd, HEADER, sizeof(HEADER));
+  write(stream_fd, HTML_HEADER, sizeof(HTML_HEADER) - 1);
   write(stream_fd, LAYOUT_PAGE.before, LAYOUT_PAGE.beforeLen);
 
-  write(stream_fd, S_INDEX_PAGE, sizeof(S_INDEX_PAGE));
+  write(stream_fd, S_INDEX_PAGE, sizeof(S_INDEX_PAGE) - 1);
 
   write(stream_fd, LAYOUT_PAGE.after, LAYOUT_PAGE.afterLen);
 
@@ -53,14 +62,18 @@ int pg_pageIndex(int stream_fd) {
 }
 
 int pg_pageView(int stream_fd, const char *name, sqlite3 *db) {
-  write(stream_fd, HEADER, sizeof(HEADER));
+  write(stream_fd, HTML_HEADER, sizeof(HTML_HEADER) - 1);
   write(stream_fd, LAYOUT_PAGE.before, LAYOUT_PAGE.beforeLen);
 
   db_getFeed(db, name);
 
+  write_str(stream_fd, "<h1>");
+  write_str(stream_fd, name);
+  write_str(stream_fd, "'s Links </h1>");
+
   db_link link;
   while (db_stepGetFeed(db, &link) == 0) {
-    write_str(stream_fd, "<a href=\"");
+    write_str(stream_fd, "<hr /><a href=\"");
     write_str(stream_fd, link.url);
     write_str(stream_fd, "\"> <h2>");
     write_str(stream_fd, link.title);
@@ -73,6 +86,59 @@ int pg_pageView(int stream_fd, const char *name, sqlite3 *db) {
   }
 
   write(stream_fd, LAYOUT_PAGE.after, LAYOUT_PAGE.afterLen);
+
+  return 0;
+}
+
+int pg_rssView(int stream_fd, const char *name, sqlite3 *db) {
+  write(stream_fd, RSS_HEADER, sizeof(RSS_HEADER) - 1);
+  write(stream_fd, RSS_OUTLINE.before, RSS_OUTLINE.beforeLen);
+  printf("%s", RSS_OUTLINE.before);
+
+  db_getFeed(db, name);
+
+  write_str(stream_fd, "<title>");
+  write_str(stream_fd, name);
+  write_str(stream_fd,
+            "'s Links </title> <link>https://share-links.graic.net/view/");
+  write_str(stream_fd, name);
+  write_str(stream_fd, "</link> <description>undefined</description>");
+
+  db_link link;
+  while (db_stepGetFeed(db, &link) == 0) {
+    write_str(stream_fd, "<item><title><![CDATA[");
+    write_str(stream_fd, link.title);
+    write_str(stream_fd, "]]></title> <guid>");
+    write_str(stream_fd, link.url);
+    write_str(stream_fd, "</guid> <pubDate>");
+
+    {
+      struct tm *tm_info;
+
+      tm_info = gmtime(&link.date);
+      if (tm_info == NULL) {
+        fprintf(stderr, "Error parsing Unix timestamp\n");
+        return 1;
+      }
+
+      char rfc822_timestamp[30];
+      strftime(rfc822_timestamp, sizeof(rfc822_timestamp),
+               "%a, %d %b %Y %H:%M:%S GMT", tm_info);
+
+      write_str(stream_fd, rfc822_timestamp);
+    }
+    write_str(stream_fd, "</pubDate>");
+
+    if (link.desc != NULL) {
+      write_str(stream_fd, "<description><![CDATA[");
+      write_str(stream_fd, link.desc);
+      write_str(stream_fd, "]]></description>");
+    }
+
+    write_str(stream_fd, "</item>");
+  }
+
+  write(stream_fd, RSS_OUTLINE.after, RSS_OUTLINE.afterLen);
 
   return 0;
 }

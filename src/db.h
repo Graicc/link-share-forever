@@ -1,10 +1,12 @@
 #include "sqlite3.h"
+#include <stdint.h>
 
 typedef struct db_link {
   const char *title;
   const char *url;
   const char *desc;
   const char *image;
+  int64_t date;
 } db_link;
 
 int db_init(sqlite3 *db);

@@ -1,5 +1,16 @@
 # Logs
 
+## 2025-09-11
+RSS! Forogt how much of RSS spec is weird (need to have xmlns:cd="http://purl.org/dc/elements/1/1" or it doesn't work)
+but it passes [https://validator.w3.org/feed/check.cgi](W3 Feed Validator) so good enough for me.
+/feed/[name] responds with rss feed like it does on the live version.
+
+I dislike that RSS uses [RFC822](https://www.ietf.org/rfc/rfc822.txt) dates. ISO8601 🔛🔝
+
+Other changes:
+- Wasn't actually initializing outlines, oopsie!
+- Date support
+
 ## 2025-09-07
 Got end to end flow working! You can now add links!
 - Moved form parsing to pg.c

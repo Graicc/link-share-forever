@@ -12,6 +12,7 @@
 
 int main() {
   md_init();
+  pg_init();
 
   sqlite3 *db;
   if (sqlite3_open("database.db", &db)) {
@@ -75,6 +76,7 @@ int main() {
     const char *index = "GET / HTTP/1.1\r\n";
 
     const char *view = "GET /view/";
+    const char *feed = "GET /feed/";
     const char *suffix = " HTTP/1.1\r\n";
 
     const char *indexPost = "POST / HTTP/1.1\r\n";
@@ -118,7 +120,7 @@ int main() {
       pg_pageIndex(client_fd);
     } else if (strncmp(buffer, view, strlen(view)) == 0) {
       // /view/*
-      const char *space = strchr(buffer + sizeof(view) - 1, ' ');
+      const char *space = strchr(buffer + strlen(view) - 1, ' ');
       if (space == NULL) {
         fprintf(stderr, "Space not found\n");
         continue;
@@ -135,6 +137,25 @@ int main() {
       subpage[subpageLen] = '\0';
 
       pg_pageView(client_fd, subpage, db);
+    } else if (strncmp(buffer, feed, strlen(feed)) == 0) {
+      // /feed/*
+      const char *space = strchr(buffer + strlen(feed) - 1, ' ');
+      if (space == NULL) {
+        fprintf(stderr, "Space not found\n");
+        continue;
+      }
+
+      // Validate that the request ends with ' HTTP/1.1'
+      if (strncmp(space, suffix, strlen(suffix)) != 0) {
+        fprintf(stderr, "Wrong suffix\n");
+        continue;
+      }
+
+      char *subpage = buffer + strlen(feed);
+      size_t subpageLen = (size_t)(space - subpage);
+      subpage[subpageLen] = '\0';
+
+      pg_rssView(client_fd, subpage, db);
     }
 
     close(client_fd);

@@ -9,8 +9,8 @@ OBJS = $(SRCS:.c=.o)
 
 all: $(TARGET)
 
-src/main.o: pages/*.html
 src/pg.o: pages/*.html
+src/pg.o: pages/*.xml
 
 src/db.o: sql/*.sql
 

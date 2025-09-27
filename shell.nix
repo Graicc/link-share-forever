@@ -15,5 +15,7 @@ pkgs.mkShellNoCC {
 
     # make
     gnumake
+
+    sqlite
  ];
 }

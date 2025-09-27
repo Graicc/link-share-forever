@@ -142,7 +142,6 @@ int db_addLink(sqlite3 *db, const char *name, const char *plaintextPassword,
   int res = sqlite3_step(addLinkStmt);
   if (res != SQLITE_DONE) {
     fprintf(stderr, "Can't step: %s\n", sqlite3_errmsg(db));
-    printf("\n!!%d", res);
     return 1;
   }
 
@@ -165,12 +164,10 @@ int db_stepGetFeed(sqlite3 *db, db_link *link) {
     link->title = (const char *)sqlite3_column_text(getFeedStmt, 0);
     link->url = (const char *)sqlite3_column_text(getFeedStmt, 1);
     link->desc = (const char *)sqlite3_column_text(getFeedStmt, 2);
-    // TODO
-    // link->date = (const char*)sqlite3_column_text(getFeedStmt, 3);
+    link->date = sqlite3_column_int64(getFeedStmt, 3);
     link->image = (const char *)sqlite3_column_text(getFeedStmt, 4);
   } else {
     fprintf(stderr, "Can't step: %s\n", sqlite3_errmsg(db));
-    printf("\n!!%d", res);
     return 1;
   }
 
