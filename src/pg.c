@@ -10,6 +10,8 @@
 
 const char HTML_HEADER[] = "HTTP/1.1 200 OK\r\n"
                            "Content-Type: text/html; charset=UTF-8\r\n\r\n";
+const char CSS_HEADER[] = "HTTP/1.1 200 OK\r\n"
+                          "Content-Type: text/css; charset=UTF-8\r\n\r\n";
 const char RSS_HEADER[] = "HTTP/1.1 200 OK\r\n"
                           "Content-Type: application/rss+xml\r\n\r\n";
 
@@ -25,6 +27,10 @@ splitString RSS_OUTLINE = {};
 
 const char S_INDEX_PAGE[] = {
 #embed "../pages/index.html"
+};
+
+const char S_STYLE_CSS[] = {
+#embed "../pages/style.css"
 };
 
 const char *TARGET = "{{}}";
@@ -67,22 +73,28 @@ int pg_pageView(int stream_fd, const char *name, sqlite3 *db) {
 
   db_getFeed(db, name);
 
-  write_str(stream_fd, "<h1>");
+  write_str(stream_fd, "<h1><span class=\"blue\">");
   write_str(stream_fd, name);
-  write_str(stream_fd, "'s Links </h1>");
+  write_str(stream_fd, "'s</span> Links </h1>");
 
   db_link link;
   while (db_stepGetFeed(db, &link) == 0) {
-    write_str(stream_fd, "<hr /><a href=\"");
+    write_str(stream_fd, "<div class=\"feed-item\"><a href=\"");
     write_str(stream_fd, link.url);
     write_str(stream_fd, "\"> <h2>");
     write_str(stream_fd, link.title);
-    write_str(stream_fd, "</h2></a>");
+    write_str(stream_fd, "</h2></a><a href=\"");
+    write_str(stream_fd, link.url);
+    write_str(stream_fd, "\">");
+    write_str(stream_fd, link.url);
+    write_str(stream_fd, "</a>");
+    write_str(stream_fd, "</p>");
     if (link.desc != NULL) {
       write_str(stream_fd, "<p>");
       write_str(stream_fd, link.desc);
       write_str(stream_fd, "</p>");
     }
+    write_str(stream_fd, "</div>");
   }
 
   write(stream_fd, LAYOUT_PAGE.after, LAYOUT_PAGE.afterLen);
@@ -140,6 +152,12 @@ int pg_rssView(int stream_fd, const char *name, sqlite3 *db) {
 
   write(stream_fd, RSS_OUTLINE.after, RSS_OUTLINE.afterLen);
 
+  return 0;
+}
+
+int pg_pageCss(int stream_fd) {
+  write(stream_fd, CSS_HEADER, sizeof(CSS_HEADER) - 1);
+  write(stream_fd, S_STYLE_CSS, sizeof(S_STYLE_CSS) - 1);
   return 0;
 }
 

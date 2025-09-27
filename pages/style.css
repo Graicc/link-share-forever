@@ -1,0 +1,94 @@
+body {
+	/* font-family: sans-serif; */
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+	max-width: 600px;
+	margin-right: auto;
+	margin-left: auto;
+	background-color: #151E2C;
+	color: white;
+}
+
+#main {
+	margin: 0 10px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+h1 {
+	text-align: center;
+	font-size: 80px;
+	font-weight: bold;
+	line-height: 1em;
+}
+
+p {
+	line-height: 1.5em;
+	font-size: 18px;
+}
+
+a {
+	color: #9CA3AF;
+}
+
+input[type="text"],
+input[type="password"] {
+	color: inherit;
+	font-size: 100%;
+	background-color: #2D3542;
+	border-radius: 0.75rem;
+	background-image: none;
+	border: none;
+	padding: 0.5rem 1.25rem;
+	margin: 5px 0;
+}
+
+label {
+	color: inherit;
+	font-size: 100%;
+}
+
+button,
+input[type="submit"] {
+	color: inherit;
+	font-weight: 600;
+	font-size: 100%;
+	background-color: #2D3542;
+	border-radius: 0.75rem;
+	background-image: none;
+	border: none;
+	padding: 0.5rem 1.25rem;
+	margin: 5px 0;
+}
+
+button:hover,
+input[type="submit"]:hover {
+	background-color: #444B56;
+	cursor: pointer;
+}
+
+.blue {
+	color: #6699FF;
+}
+
+.feed-item {
+	/* hack for mobile not overflowing but whatever */
+	width: 80%;
+	background-color: #111827;
+	border-radius: 0.75rem;
+	margin: 0.25rem 0;
+	padding: 25px;
+	display: flex;
+	flex-direction: column;
+}
+
+.feed-item h2,
+.feed-item p {
+	margin: 0;
+	color: white;
+	font-size: 18px;
+}
+
+.feed-item a {
+	text-decoration: none;
+}

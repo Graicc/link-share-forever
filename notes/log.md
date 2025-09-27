@@ -1,5 +1,8 @@
 # Logs
 
+## 2025-09-26
+Oopsie didn't work on this for a while. Did a bunch of style work for the website, it maches the look of the old one now. Major blockers rn are adding the 6hr timeout and a new post page. Also should probably add some 404 pages when the db returns nothing. Tried setting up entr for hot reloading to no avail.
+
 ## 2025-09-11
 RSS! Forogt how much of RSS spec is weird (need to have xmlns:cd="http://purl.org/dc/elements/1/1" or it doesn't work)
 but it passes [https://validator.w3.org/feed/check.cgi](W3 Feed Validator) so good enough for me.

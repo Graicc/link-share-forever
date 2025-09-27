@@ -1,5 +1,30 @@
-<h1>Hello, World!</h1>
+<h1>Link <span class="blue">Share</span></h1>
 
+<p>
+  Link Share is an site for sharing cool links you find with your friends.
+  <br />
+  <br />
+  You do this through RSS feeds.
+  RSS is a tool that allows people to receive updates from websites by adding a URL to their RSS reader.
+  Here it is used to give you your own feed of links that they can share with others.
+  <br />
+  <br />
+  To use RSS you need an RSS reader. I reccomend <a href="https://www.inoreader.com/">Inoreader</a>.
+  You should put a widget on your phone's home screen!
+  <br />
+  <br />
+  RSS works best when posts are not frequent and you read every post.
+  As such, Link Share has a 6 hour cooldown.
+  Nobody finds something truely worth sharing every 6 hours.
+  <br />
+  <br />
+  <!-- Need this to be true before I can add it! -->
+  <!-- Link Share is done. There will not be any more features. There will never be any ads. It will remain up until I die
+  (based on acturial
+  tables, 60 years). -->
+</p>
+
+<h3>Post to feed</h3>
 <form action="/" method="post">
   <input type="text" id="feed_name" name="feed_name" required="true" />
   <label for="feed_name">Feed Name</label>
@@ -9,8 +34,9 @@
   <label for="feed_password">Password</label>
   <br />
 
-  <input id="feed_url" required="true" name="feed_url" />
+  <input type="text" id="feed_url" required="true" name="feed_url" />
   <label for="feed_url">New URL</label>
 
+  <br />
   <input type="submit" value="Submit" />
 </form>

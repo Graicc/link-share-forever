@@ -18,6 +18,8 @@ int pg_pageView(int stream_fd, const char *name, sqlite3 *db);
 
 int pg_rssView(int stream_fd, const char *name, sqlite3 *db);
 
+int pg_pageCss(int stream_fd);
+
 int pg_parseForm(const char *response, const char *key1, const char **outVal1,
                  const char *key2, const char **outVal2, const char *key3,
                  const char **outVal3);

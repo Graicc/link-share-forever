@@ -11,6 +11,7 @@ all: $(TARGET)
 
 src/pg.o: pages/*.html
 src/pg.o: pages/*.xml
+src/pg.o: pages/*.css
 
 src/db.o: sql/*.sql
 

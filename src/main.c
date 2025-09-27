@@ -74,6 +74,7 @@ int main() {
     // printf(buffer);
 
     const char *index = "GET / HTTP/1.1\r\n";
+    const char *css = "GET /style.css HTTP/1.1\r\n";
 
     const char *view = "GET /view/";
     const char *feed = "GET /feed/";
@@ -83,6 +84,8 @@ int main() {
 
     if (strncmp(buffer, index, strlen(index)) == 0) {
       pg_pageIndex(client_fd);
+    } else if (strncmp(buffer, css, strlen(css)) == 0) {
+      pg_pageCss(client_fd);
     } else if (strncmp(buffer, indexPost, strlen(indexPost)) == 0) {
       // POST /
       // Used for submitting a new link
