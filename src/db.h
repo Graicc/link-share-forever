@@ -18,3 +18,5 @@ int db_addLink(sqlite3 *db, const char *name, const char *plaintextPassword,
 
 int db_getFeed(sqlite3 *db, const char *name);
 int db_stepGetFeed(sqlite3 *db, db_link *link);
+
+int db_canPost(sqlite3 *db, const char *name);

@@ -20,10 +20,16 @@ const char S_ADD_LINK[] = {
 #embed "../sql/add_link.sql"
 };
 
+const char S_GET_TIME_SINCE_LAST_POST[] = {
+#embed "../sql/get_time_since_last_post.sql"
+};
+
 sqlite3_stmt *addFeedStmt = NULL;
 sqlite3_stmt *getFeedStmt = NULL;
 
 sqlite3_stmt *addLinkStmt = NULL;
+
+sqlite3_stmt *getTimeSinceLastPostStmt = NULL;
 
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
@@ -46,6 +52,9 @@ int db_init(sqlite3 *db) {
   sqlite3_prepare_v2(db, S_ADD_FEED, sizeof(S_ADD_FEED), &addFeedStmt, NULL);
   sqlite3_prepare_v2(db, S_GET_FEED, sizeof(S_GET_FEED), &getFeedStmt, NULL);
   sqlite3_prepare_v2(db, S_ADD_LINK, sizeof(S_ADD_LINK), &addLinkStmt, NULL);
+  sqlite3_prepare_v2(db, S_GET_TIME_SINCE_LAST_POST,
+                     sizeof(S_GET_TIME_SINCE_LAST_POST),
+                     &getTimeSinceLastPostStmt, NULL);
 
   // TODO: remove temporary data
 
@@ -169,6 +178,22 @@ int db_stepGetFeed(sqlite3 *db, db_link *link) {
   } else {
     fprintf(stderr, "Can't step: %s\n", sqlite3_errmsg(db));
     return 1;
+  }
+
+  return 0;
+}
+
+int db_canPost(sqlite3 *db, const char *name) {
+  sqlite3_reset(getTimeSinceLastPostStmt);
+
+  sqlite3_bind_text(getTimeSinceLastPostStmt, 1, name, strlen(name),
+                    SQLITE_TRANSIENT);
+
+  int res = sqlite3_step(getTimeSinceLastPostStmt);
+  if (res == SQLITE_ROW) {
+    double lastPostTimeDays =
+        sqlite3_column_double(getTimeSinceLastPostStmt, 0);
+    return lastPostTimeDays > 0.25; // 6 hours
   }
 
   return 0;

@@ -1,5 +1,10 @@
 # Logs
 
+## 2025-09-27
+Almost past the finish line. Added rate limiting on making new posts, now you can only do it every 6 hours.
+Still need to add the ability to make a new feed, but after that its just getting it deployed.
+I think I'll probably use oracle free tier compute + nginx + systemd + cloudflare (for https) since I've already used it all. Maybe a ./config folder with config files and shell scripts to copy them. Should be able to get away with scp-ing the binary over, its only 5Mb.
+
 ## 2025-09-26
 Oopsie didn't work on this for a while. Did a bunch of style work for the website, it maches the look of the old one now. Major blockers rn are adding the 6hr timeout and a new post page. Also should probably add some 404 pages when the db returns nothing. Tried setting up entr for hot reloading to no avail.
 

@@ -184,6 +184,7 @@ int pg_pageRedirect(int stream_fd, const char *url) {
   write(stream_fd, REDIRECT_PAGE.before, REDIRECT_PAGE.beforeLen);
   write_str(stream_fd, url);
   write(stream_fd, REDIRECT_PAGE.after, REDIRECT_PAGE.afterLen);
+  return 0;
 }
 
 int pg_parseForm(const char *response, const char *key1, const char **outVal1,

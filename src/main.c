@@ -51,6 +51,7 @@ int main() {
     exit(1);
   }
 
+  printf("Server up on http://localhost:3000\n");
   while (1) {
     // printf("Waiting for connection\n");
     int client_fd = accept(server_fd, NULL, NULL);
@@ -104,24 +105,36 @@ int main() {
         continue;
       }
 
-      printf("\n\nArguments: %s, %s, %s\n\n", feed_name, password, feed_url);
+      printf("Arguments: %s, %s, %s\n", feed_name, password, feed_url);
+
+      int canPost = db_canPost(db, feed_name);
+      if (!canPost) {
+        pg_pageIndex(client_fd);
+        printf("Can't post\n");
+        close(client_fd);
+        continue;
+      }
 
       char *url = md_decodeURL(feed_url);
       db_link info = {.url = url};
       if (md_getMetadata(&info) != 0) {
-        fprintf(stderr, "Failure to get metadata");
+        fprintf(stderr, "Failure to get metadata\n");
+        pg_pageIndex(client_fd);
+        close(client_fd);
         continue;
       }
 
       if (db_addLink(db, feed_name, password, &info) != 0) {
-        fprintf(stderr, "Failure to add link");
+        fprintf(stderr, "Failure to add link\n");
+        pg_pageIndex(client_fd);
+        close(client_fd);
         continue;
       }
 
-      free(info.title);
-      free(info.url);
-      free(info.desc);
-      free(info.image);
+      free((char *)info.title);
+      free((char *)info.url);
+      free((char *)info.desc);
+      free((char *)info.image);
 
       pg_pageRedirect(client_fd, feed_name);
     } else if (strncmp(buffer, view, strlen(view)) == 0) {
@@ -129,12 +142,14 @@ int main() {
       const char *space = strchr(buffer + strlen(view) - 1, ' ');
       if (space == NULL) {
         fprintf(stderr, "Space not found\n");
+        close(client_fd);
         continue;
       }
 
       // Validate that the request ends with ' HTTP/1.1'
       if (strncmp(space, suffix, strlen(suffix)) != 0) {
         fprintf(stderr, "Wrong suffix\n");
+        close(client_fd);
         continue;
       }
 
@@ -148,12 +163,14 @@ int main() {
       const char *space = strchr(buffer + strlen(feed) - 1, ' ');
       if (space == NULL) {
         fprintf(stderr, "Space not found\n");
+        close(client_fd);
         continue;
       }
 
       // Validate that the request ends with ' HTTP/1.1'
       if (strncmp(space, suffix, strlen(suffix)) != 0) {
         fprintf(stderr, "Wrong suffix\n");
+        close(client_fd);
         continue;
       }
 
