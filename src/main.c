@@ -52,7 +52,7 @@ int main() {
   }
 
   while (1) {
-    printf("Waiting for connection\n");
+    // printf("Waiting for connection\n");
     int client_fd = accept(server_fd, NULL, NULL);
     if (client_fd < 0) {
       perror("Failed to accept connection\n");
@@ -75,6 +75,7 @@ int main() {
 
     const char *index = "GET / HTTP/1.1\r\n";
     const char *css = "GET /style.css HTTP/1.1\r\n";
+    const char *favicon = "GET /favicon.png HTTP/1.1\r\n";
 
     const char *view = "GET /view/";
     const char *feed = "GET /feed/";
@@ -86,6 +87,8 @@ int main() {
       pg_pageIndex(client_fd);
     } else if (strncmp(buffer, css, strlen(css)) == 0) {
       pg_pageCss(client_fd);
+    } else if (strncmp(buffer, favicon, strlen(favicon)) == 0) {
+      pg_pageFavicon(client_fd);
     } else if (strncmp(buffer, indexPost, strlen(indexPost)) == 0) {
       // POST /
       // Used for submitting a new link
@@ -120,7 +123,7 @@ int main() {
       free(info.desc);
       free(info.image);
 
-      pg_pageIndex(client_fd);
+      pg_pageRedirect(client_fd, feed_name);
     } else if (strncmp(buffer, view, strlen(view)) == 0) {
       // /view/*
       const char *space = strchr(buffer + strlen(view) - 1, ' ');

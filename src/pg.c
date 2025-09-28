@@ -12,6 +12,8 @@ const char HTML_HEADER[] = "HTTP/1.1 200 OK\r\n"
                            "Content-Type: text/html; charset=UTF-8\r\n\r\n";
 const char CSS_HEADER[] = "HTTP/1.1 200 OK\r\n"
                           "Content-Type: text/css; charset=UTF-8\r\n\r\n";
+const char PNG_HEADER[] = "HTTP/1.1 200 OK\r\n"
+                          "Content-Type: image/png\r\n\r\n";
 const char RSS_HEADER[] = "HTTP/1.1 200 OK\r\n"
                           "Content-Type: application/rss+xml\r\n\r\n";
 
@@ -19,6 +21,11 @@ const char S_LAYOUT_PAGE[] = {
 #embed "../pages/layout.html"
     , '\0'};
 splitString LAYOUT_PAGE = {};
+
+const char S_REDIRECT_PAGE[] = {
+#embed "../pages/redirect.html"
+};
+splitString REDIRECT_PAGE = {};
 
 const char S_RSS_OUTLINE[] = {
 #embed "../pages/rss_outline.xml"
@@ -33,10 +40,15 @@ const char S_STYLE_CSS[] = {
 #embed "../pages/style.css"
 };
 
+const char S_FAVICON_PNG[] = {
+#embed "../pages/favicon.png"
+};
+
 const char *TARGET = "{{}}";
 
 int pg_init() {
   pg_splitString(S_LAYOUT_PAGE, &LAYOUT_PAGE);
+  pg_splitString(S_REDIRECT_PAGE, &REDIRECT_PAGE);
   pg_splitString(S_RSS_OUTLINE, &RSS_OUTLINE);
 
   return 0;
@@ -159,6 +171,19 @@ int pg_pageCss(int stream_fd) {
   write(stream_fd, CSS_HEADER, sizeof(CSS_HEADER) - 1);
   write(stream_fd, S_STYLE_CSS, sizeof(S_STYLE_CSS) - 1);
   return 0;
+}
+
+int pg_pageFavicon(int stream_fd) {
+  write(stream_fd, PNG_HEADER, sizeof(PNG_HEADER) - 1);
+  write(stream_fd, S_FAVICON_PNG, sizeof(S_FAVICON_PNG) - 1);
+  return 0;
+}
+
+int pg_pageRedirect(int stream_fd, const char *url) {
+  write(stream_fd, HTML_HEADER, sizeof(HTML_HEADER) - 1);
+  write(stream_fd, REDIRECT_PAGE.before, REDIRECT_PAGE.beforeLen);
+  write_str(stream_fd, url);
+  write(stream_fd, REDIRECT_PAGE.after, REDIRECT_PAGE.afterLen);
 }
 
 int pg_parseForm(const char *response, const char *key1, const char **outVal1,

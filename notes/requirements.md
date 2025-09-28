@@ -1,17 +1,17 @@
 P0:
-- Persist data
-- Submit new URL with feed name/password
-- Create new feed
-- RSS feed for pages
+- [X] Persist data
+- [X] Submit new URL with feed name/password
+- [ ] Create new feed
+- [X] RSS feed for pages
 
 P1
-- Get rich data from URL
-- HTTP feed for pages
+- [X] Get rich data from URL
+- [X] HTTP feed for pages
 
 P2
-- Better youtube support
-- Remove items from feed
-- Looks good
-- Caching
-- Persistent login
-- Nice erorr messages
+- [ ] Better youtube support
+- [ ] Remove items from feed
+- [X] Looks good
+- [ ] Caching
+- [ ] Persistent login
+- [ ] Nice erorr messages
