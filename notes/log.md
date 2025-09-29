@@ -1,5 +1,17 @@
 # Logs
 
+## 2025-09-28
+Lots of usability improvemnts today.
+
+Switched over to bcrypt. It was easier than I expected. Tried vibe coding it. The last (and first) time I tried vibe coding on this project the first thing it did was add a SQL injection.
+Unsuprisingly, it did not do well. It did correctly point me at `crypt` being the function I needed, but the hash specifier for bcrypt was malformed, the salt was `linksharesaltstring22chars!` (notably 27 characters), the output buffer was 64 chars instead of 60, it didn't use constants anywhere, the dependence it added to shell.nix didn't exist, and also it always returned NULL so auth would always succeed. Actually writing the code like its 2019 worked (duh).
+
+The man pages for `crypt` say that "salt is a two-character string". This is a lie. It is actually a string in the Modular Crypt Format! RTFM (Recognize The Faulty Manual)!
+
+Added error reporting to the link add form. Did some sql crimes in `can_post.sql` to get the type of error directly. Once again tried to have an LLM generate it, once again had to rewrite it from scratch because it didn't understand that the query would be empty if there was no user with the id (yes I reproompted it with this information)
+
+I feel like there should've been a more native way than returning a new page with an error message. This is probably a usecase where HTMX would be usefull, but HTMX won't be a thing people use when I die. Also, it'd require adding JS to the project. no more scope, we have enough
+
 ## 2025-09-27
 Almost past the finish line. Added rate limiting on making new posts, now you can only do it every 6 hours.
 Still need to add the ability to make a new feed, but after that its just getting it deployed.

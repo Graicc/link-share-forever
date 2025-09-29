@@ -9,6 +9,13 @@ typedef struct db_link {
   int64_t date;
 } db_link;
 
+typedef enum canPost {
+  CANPOST_OK = 0,
+  CANPOST_NO_FEED,
+  CANPOST_WRONG_PASSWORD,
+  CANPOST_RATE_LIMIT,
+} canPost;
+
 int db_init(sqlite3 *db);
 
 int db_addFeed(sqlite3 *db, const char *name, const char *plaintextPassword);
@@ -19,4 +26,5 @@ int db_addLink(sqlite3 *db, const char *name, const char *plaintextPassword,
 int db_getFeed(sqlite3 *db, const char *name);
 int db_stepGetFeed(sqlite3 *db, db_link *link);
 
-int db_canPost(sqlite3 *db, const char *name);
+canPost db_canPost(sqlite3 *db, const char *name,
+                   const char *plaintextPassword);

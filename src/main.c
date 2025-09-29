@@ -53,7 +53,7 @@ int main() {
 
   printf("Server up on http://localhost:3000\n");
   while (1) {
-    // printf("Waiting for connection\n");
+    printf("Waiting for connection\n");
     int client_fd = accept(server_fd, NULL, NULL);
     if (client_fd < 0) {
       perror("Failed to accept connection\n");
@@ -85,7 +85,7 @@ int main() {
     const char *indexPost = "POST / HTTP/1.1\r\n";
 
     if (strncmp(buffer, index, strlen(index)) == 0) {
-      pg_pageIndex(client_fd);
+      pg_pageIndex(client_fd, NULL);
     } else if (strncmp(buffer, css, strlen(css)) == 0) {
       pg_pageCss(client_fd);
     } else if (strncmp(buffer, favicon, strlen(favicon)) == 0) {
@@ -100,17 +100,31 @@ int main() {
 
       if (pg_parseForm(buffer, "feed_name", &feed_name, "password", &password,
                        "feed_url", &feed_url) != 0) {
-        fprintf(stderr, "Not all arguments provided: %d %d %d\n",
-                feed_name == NULL, password == NULL, feed_url == NULL);
+        pg_pageIndex(client_fd, "Not all arguments provided");
+        close(client_fd);
         continue;
       }
 
       printf("Arguments: %s, %s, %s\n", feed_name, password, feed_url);
 
-      int canPost = db_canPost(db, feed_name);
-      if (!canPost) {
-        pg_pageIndex(client_fd);
-        printf("Can't post\n");
+      canPost canPost = db_canPost(db, feed_name, password);
+      switch (canPost) {
+      case CANPOST_OK:
+        break;
+      case CANPOST_NO_FEED:
+        pg_pageIndex(client_fd, "Feed not found");
+        close(client_fd);
+        continue;
+      case CANPOST_WRONG_PASSWORD:
+        pg_pageIndex(client_fd, "Incorrect password");
+        close(client_fd);
+        continue;
+      case CANPOST_RATE_LIMIT:
+        pg_pageIndex(client_fd, "You must wait 6 hours between sharing links");
+        close(client_fd);
+        continue;
+      default:
+        pg_pageIndex(client_fd, "Unknown error");
         close(client_fd);
         continue;
       }
@@ -118,15 +132,14 @@ int main() {
       char *url = md_decodeURL(feed_url);
       db_link info = {.url = url};
       if (md_getMetadata(&info) != 0) {
-        fprintf(stderr, "Failure to get metadata\n");
-        pg_pageIndex(client_fd);
+        pg_pageIndex(client_fd, "Failed to get metadata for link");
         close(client_fd);
         continue;
       }
 
       if (db_addLink(db, feed_name, password, &info) != 0) {
-        fprintf(stderr, "Failure to add link\n");
-        pg_pageIndex(client_fd);
+        pg_pageIndex(client_fd,
+                     "Internal error occoured. Please try again later");
         close(client_fd);
         continue;
       }

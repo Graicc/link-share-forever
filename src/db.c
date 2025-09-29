@@ -1,8 +1,10 @@
 #include "db.h"
 
-#include "openssl/sha.h"
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
+
+#define BCRYPT_LEN 60
 
 const char S_INIT[] = {
 #embed "../sql/init.sql"
@@ -20,8 +22,8 @@ const char S_ADD_LINK[] = {
 #embed "../sql/add_link.sql"
 };
 
-const char S_GET_TIME_SINCE_LAST_POST[] = {
-#embed "../sql/get_time_since_last_post.sql"
+const char S_CAN_POST[] = {
+#embed "../sql/can_post.sql"
 };
 
 sqlite3_stmt *addFeedStmt = NULL;
@@ -29,7 +31,7 @@ sqlite3_stmt *getFeedStmt = NULL;
 
 sqlite3_stmt *addLinkStmt = NULL;
 
-sqlite3_stmt *getTimeSinceLastPostStmt = NULL;
+sqlite3_stmt *canPostStmt = NULL;
 
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
@@ -52,14 +54,12 @@ int db_init(sqlite3 *db) {
   sqlite3_prepare_v2(db, S_ADD_FEED, sizeof(S_ADD_FEED), &addFeedStmt, NULL);
   sqlite3_prepare_v2(db, S_GET_FEED, sizeof(S_GET_FEED), &getFeedStmt, NULL);
   sqlite3_prepare_v2(db, S_ADD_LINK, sizeof(S_ADD_LINK), &addLinkStmt, NULL);
-  sqlite3_prepare_v2(db, S_GET_TIME_SINCE_LAST_POST,
-                     sizeof(S_GET_TIME_SINCE_LAST_POST),
-                     &getTimeSinceLastPostStmt, NULL);
+  sqlite3_prepare_v2(db, S_CAN_POST, sizeof(S_CAN_POST), &canPostStmt, NULL);
 
   // TODO: remove temporary data
 
   db_addFeed(db, "Graic", "hunter2");
-  db_addFeed(db, "Graic2", "hunter2");
+  db_addFeed(db, "Graic2", "hunter3");
 
   // db_link post = {
   //     .title = "Graic Blog",
@@ -80,30 +80,28 @@ int db_init(sqlite3 *db) {
   return res;
 }
 
-void db_hash(const char *plaintextPassword,
-             unsigned char hash[SHA256_DIGEST_LENGTH + 1]) {
+void db_hash(const char *plaintextPassword, char hash[BCRYPT_LEN]) {
   // yeah yeah this should be random for each feed so that you can't precompute
   // a lookup table
-  const char *SALT = "linksharesalt";
-
-  char saltedPassword[256];
-  snprintf(saltedPassword, sizeof(saltedPassword), "%s%s", plaintextPassword,
-           SALT);
-
-  SHA256((unsigned char *)saltedPassword, strlen(saltedPassword), hash);
-  hash[SHA256_DIGEST_LENGTH] = 0;
+  const char *salt = "$2b$12$linksharesaltlinkshare";
+  const char *crypted = crypt(plaintextPassword, salt);
+  if (crypted) {
+    memcpy(hash, crypted, BCRYPT_LEN);
+  } else {
+    memset(hash, 0, BCRYPT_LEN);
+  }
 }
 
 int db_addFeed(sqlite3 *db, const char *name, const char *plaintextPassword) {
-  unsigned char hash[SHA256_DIGEST_LENGTH + 1];
+  char hash[BCRYPT_LEN] = {0};
   db_hash(plaintextPassword, hash);
 
   sqlite3_reset(addFeedStmt);
   // SQLITE_STATIC = We ensure the pointer will live until statement is
-  // finalized SQLITE_TRANSIENT = SQLite should make a copy of this data
+  // finalized
+  // SQLITE_TRANSIENT = SQLite should make a copy of this data
   sqlite3_bind_text(addFeedStmt, 1, name, strlen(name), SQLITE_TRANSIENT);
-  sqlite3_bind_text(addFeedStmt, 2, (const char *)hash, SHA256_DIGEST_LENGTH,
-                    SQLITE_TRANSIENT);
+  sqlite3_bind_text(addFeedStmt, 2, hash, BCRYPT_LEN, SQLITE_TRANSIENT);
 
   int res = sqlite3_step(addFeedStmt);
   if (res != SQLITE_DONE) {
@@ -122,7 +120,7 @@ int db_addLink(sqlite3 *db, const char *name, const char *plaintextPassword,
     return 1;
   }
 
-  unsigned char hash[SHA256_DIGEST_LENGTH + 1];
+  char hash[BCRYPT_LEN] = {0};
   db_hash(plaintextPassword, hash);
 
   sqlite3_reset(addLinkStmt);
@@ -145,8 +143,7 @@ int db_addLink(sqlite3 *db, const char *name, const char *plaintextPassword,
   }
 
   sqlite3_bind_text(addLinkStmt, 5, name, strlen(name), SQLITE_TRANSIENT);
-  sqlite3_bind_text(addLinkStmt, 6, (const char *)hash, SHA256_DIGEST_LENGTH,
-                    SQLITE_TRANSIENT);
+  sqlite3_bind_text(addLinkStmt, 6, hash, BCRYPT_LEN, SQLITE_TRANSIENT);
 
   int res = sqlite3_step(addLinkStmt);
   if (res != SQLITE_DONE) {
@@ -183,18 +180,21 @@ int db_stepGetFeed(sqlite3 *db, db_link *link) {
   return 0;
 }
 
-int db_canPost(sqlite3 *db, const char *name) {
-  sqlite3_reset(getTimeSinceLastPostStmt);
+canPost db_canPost(sqlite3 *db, const char *name,
+                   const char *plaintextPassword) {
+  char hash[BCRYPT_LEN] = {0};
+  db_hash(plaintextPassword, hash);
 
-  sqlite3_bind_text(getTimeSinceLastPostStmt, 1, name, strlen(name),
-                    SQLITE_TRANSIENT);
+  sqlite3_reset(canPostStmt);
 
-  int res = sqlite3_step(getTimeSinceLastPostStmt);
+  sqlite3_bind_text(canPostStmt, 1, hash, BCRYPT_LEN, SQLITE_TRANSIENT);
+  sqlite3_bind_text(canPostStmt, 2, name, strlen(name), SQLITE_TRANSIENT);
+
+  int res = sqlite3_step(canPostStmt);
   if (res == SQLITE_ROW) {
-    double lastPostTimeDays =
-        sqlite3_column_double(getTimeSinceLastPostStmt, 0);
-    return lastPostTimeDays > 0.25; // 6 hours
+    int code = sqlite3_column_int(canPostStmt, 0);
+    return (canPost)code;
   }
 
-  return 0;
+  return CANPOST_NO_FEED;
 }

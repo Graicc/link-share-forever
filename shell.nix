@@ -5,7 +5,7 @@ in
 pkgs.mkShellNoCC {
   buildInputs = with unstable; [
     gcc15
-    openssl
+    libxcrypt
     curl
     gdb
     

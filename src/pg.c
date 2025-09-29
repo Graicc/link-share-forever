@@ -24,17 +24,23 @@ splitString LAYOUT_PAGE = {};
 
 const char S_REDIRECT_PAGE[] = {
 #embed "../pages/redirect.html"
-};
+    , '\0'};
 splitString REDIRECT_PAGE = {};
 
 const char S_RSS_OUTLINE[] = {
 #embed "../pages/rss_outline.xml"
-};
+    , '\0'};
 splitString RSS_OUTLINE = {};
 
 const char S_INDEX_PAGE[] = {
 #embed "../pages/index.html"
-};
+    , '\0'};
+splitString INDEX_PAGE = {};
+
+const char S_ERROR_BOX[] = {
+#embed "../pages/error_box.html"
+    , '\0'};
+splitString ERROR_BOX = {};
 
 const char S_STYLE_CSS[] = {
 #embed "../pages/style.css"
@@ -50,6 +56,8 @@ int pg_init() {
   pg_splitString(S_LAYOUT_PAGE, &LAYOUT_PAGE);
   pg_splitString(S_REDIRECT_PAGE, &REDIRECT_PAGE);
   pg_splitString(S_RSS_OUTLINE, &RSS_OUTLINE);
+  pg_splitString(S_INDEX_PAGE, &INDEX_PAGE);
+  pg_splitString(S_ERROR_BOX, &ERROR_BOX);
 
   return 0;
 }
@@ -68,11 +76,19 @@ int pg_splitString(const char *str, splitString *out) {
   return 0;
 }
 
-int pg_pageIndex(int stream_fd) {
+int pg_pageIndex(int stream_fd, const char *error) {
   write(stream_fd, HTML_HEADER, sizeof(HTML_HEADER) - 1);
   write(stream_fd, LAYOUT_PAGE.before, LAYOUT_PAGE.beforeLen);
 
-  write(stream_fd, S_INDEX_PAGE, sizeof(S_INDEX_PAGE) - 1);
+  write(stream_fd, INDEX_PAGE.before, INDEX_PAGE.beforeLen);
+
+  if (error != NULL) {
+    write(stream_fd, ERROR_BOX.before, ERROR_BOX.beforeLen);
+    write_str(stream_fd, error);
+    write(stream_fd, ERROR_BOX.after, ERROR_BOX.afterLen);
+  }
+
+  write(stream_fd, INDEX_PAGE.after, INDEX_PAGE.afterLen);
 
   write(stream_fd, LAYOUT_PAGE.after, LAYOUT_PAGE.afterLen);
 

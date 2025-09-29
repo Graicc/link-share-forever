@@ -92,3 +92,17 @@ input[type="submit"]:hover {
 .feed-item a {
 	text-decoration: none;
 }
+
+.error-box {
+	background-color: #B91C1C;
+	color: white;
+	border-radius: 0.75rem;
+	margin: 5px auto;
+	padding: 0.25em;
+	font-size: 18px;
+	text-align: center;
+}
+
+.error-box p {
+	margin: 0;
+}

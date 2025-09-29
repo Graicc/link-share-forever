@@ -3,7 +3,7 @@
 CREATE TABLE IF NOT EXISTS feeds (
   id INTEGER PRIMARY KEY,
   name varchar(255) UNIQUE NOT NULL,
-  password varchar(32) NOT NULL
+  password varchar(60) NOT NULL
 );
 
 -- DROP TABLE IF EXISTS links;

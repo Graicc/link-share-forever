@@ -7,12 +7,11 @@ typedef struct splitString {
   const char *after;
   size_t afterLen;
 } splitString;
-
 int pg_init();
 
 int pg_splitString(const char *str, splitString *out);
 
-int pg_pageIndex(int stream_fd);
+int pg_pageIndex(int stream_fd, const char *error);
 
 int pg_pageView(int stream_fd, const char *name, sqlite3 *db);
 
