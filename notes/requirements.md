@@ -1,7 +1,7 @@
 P0:
 - [X] Persist data
 - [X] Submit new URL with feed name/password
-- [ ] Create new feed
+- [X] Create new feed
 - [X] RSS feed for pages
 
 P1
@@ -14,4 +14,4 @@ P2
 - [X] Looks good
 - [ ] Caching
 - [ ] Persistent login
-- [ ] Nice erorr messages
+- [X] Nice error messages

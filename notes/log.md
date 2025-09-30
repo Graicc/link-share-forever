@@ -1,5 +1,12 @@
 # Logs
 
+## 2025-09-29
+Shipped!
+
+Added the ability to make a new feed, and put it on an oracle free tier. Need to set it up to properly setup after a restart (right now it's in a tmux session). Ended up installing nix on it and building from source, it was the easiest. In the past I've tried to copy build artifacts, but that's always more hassle than its worth. Updated the DNS records so it should point there in the morning. Final thing before I can call it done is to fix the metadata of youtube urls, since youtube returns generic metadata if you query it from a server.
+
+Glad to have it up, now I *just* need to write the blog post.
+
 ## 2025-09-28
 Lots of usability improvemnts today.
 
