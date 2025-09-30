@@ -77,9 +77,11 @@ int main() {
     const char *index = "GET / HTTP/1.1\r\n";
     const char *css = "GET /style.css HTTP/1.1\r\n";
     const char *favicon = "GET /favicon.png HTTP/1.1\r\n";
-
     const char *view = "GET /view/";
     const char *feed = "GET /feed/";
+    const char *new = "GET /new";
+    const char *newPost = "POST /new HTTP/1.1\r\n";
+
     const char *suffix = " HTTP/1.1\r\n";
 
     const char *indexPost = "POST / HTTP/1.1\r\n";
@@ -192,6 +194,39 @@ int main() {
       subpage[subpageLen] = '\0';
 
       pg_rssView(client_fd, subpage, db);
+    } else if (strncmp(buffer, new, strlen(new)) == 0) {
+      pg_pageNew(client_fd, NULL);
+    } else if (strncmp(buffer, newPost, strlen(newPost)) == 0) {
+      // POST /
+      // Used for submitting a new link
+
+      const char *feed_name = NULL;
+      const char *password = NULL;
+      const char *password2 = NULL;
+
+      if (pg_parseForm(buffer, "feed_name", &feed_name, "password", &password,
+                       "password2", &password2) != 0) {
+        pg_pageNew(client_fd, "Not all arguments provided");
+        close(client_fd);
+        continue;
+      }
+
+      printf("Arguments: %s, %s, %s\n", feed_name, password, password2);
+
+      if (strcmp(password, password2) != 0) {
+        pg_pageNew(client_fd, "Passwords must match");
+        close(client_fd);
+        continue;
+      }
+
+      int res = db_addFeed(db, feed_name, password);
+      if (res != 0) {
+        pg_pageNew(client_fd, "A feed already exists with that name");
+        close(client_fd);
+        continue;
+      }
+
+      pg_pageRedirect(client_fd, feed_name);
     }
 
     close(client_fd);

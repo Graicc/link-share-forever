@@ -56,27 +56,6 @@ int db_init(sqlite3 *db) {
   sqlite3_prepare_v2(db, S_ADD_LINK, sizeof(S_ADD_LINK), &addLinkStmt, NULL);
   sqlite3_prepare_v2(db, S_CAN_POST, sizeof(S_CAN_POST), &canPostStmt, NULL);
 
-  // TODO: remove temporary data
-
-  db_addFeed(db, "Graic", "hunter2");
-  db_addFeed(db, "Graic2", "hunter3");
-
-  // db_link post = {
-  //     .title = "Graic Blog",
-  //     .url = "https://graic.net",
-  //     .desc = "Description for graic.net",
-  //     .image = NULL,
-  // };
-  // db_addLink(db, "Graic", "hunter2", &post);
-  // db_link post2 = {
-  //     .title = "Callan",
-  //     .url = "https://callan101.com",
-  //     .desc = "Description",
-  //     .image = NULL,
-  // };
-  // db_addLink(db, "Graic", "hunter2", &post2);
-  // db_addLink(db, "Graic2", "hunter2", &post);
-
   return res;
 }
 
@@ -106,6 +85,9 @@ int db_addFeed(sqlite3 *db, const char *name, const char *plaintextPassword) {
   int res = sqlite3_step(addFeedStmt);
   if (res != SQLITE_DONE) {
     fprintf(stderr, "Can't step: %s\n", sqlite3_errmsg(db));
+    return 1;
+  }
+  if (sqlite3_changes(db) != 1) {
     return 1;
   }
 

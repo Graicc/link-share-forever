@@ -6,6 +6,7 @@ body {
 	margin-left: auto;
 	background-color: #151E2C;
 	color: white;
+	font-size: 18px;
 }
 
 #main {
@@ -22,13 +23,23 @@ h1 {
 	line-height: 1em;
 }
 
+h1 a {
+	font-size: inherit;
+	color: inherit;
+	font-weight: inherit;
+	text-decoration: inherit;
+}
+
 p {
 	line-height: 1.5em;
-	font-size: 18px;
 }
 
 a {
 	color: #9CA3AF;
+}
+
+a.RSS {
+	margin-bottom: 10px;
 }
 
 input[type="text"],
@@ -86,7 +97,6 @@ input[type="submit"]:hover {
 .feed-item p {
 	margin: 0;
 	color: white;
-	font-size: 18px;
 }
 
 .feed-item a {
@@ -99,7 +109,6 @@ input[type="submit"]:hover {
 	border-radius: 0.75rem;
 	margin: 5px auto;
 	padding: 0.25em;
-	font-size: 18px;
 	text-align: center;
 }
 

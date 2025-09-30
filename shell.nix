@@ -1,9 +1,6 @@
-let
-  unstable = import <nixos-unstable> {};
-in
 { pkgs ? import <nixpkgs> {} }:
 pkgs.mkShellNoCC {
-  buildInputs = with unstable; [
+  buildInputs = with pkgs; [
     gcc15
     libxcrypt
     curl

@@ -37,6 +37,11 @@ const char S_INDEX_PAGE[] = {
     , '\0'};
 splitString INDEX_PAGE = {};
 
+const char S_NEW_PAGE[] = {
+#embed "../pages/new.html"
+    , '\0'};
+splitString NEW_PAGE = {};
+
 const char S_ERROR_BOX[] = {
 #embed "../pages/error_box.html"
     , '\0'};
@@ -57,6 +62,7 @@ int pg_init() {
   pg_splitString(S_REDIRECT_PAGE, &REDIRECT_PAGE);
   pg_splitString(S_RSS_OUTLINE, &RSS_OUTLINE);
   pg_splitString(S_INDEX_PAGE, &INDEX_PAGE);
+  pg_splitString(S_NEW_PAGE, &NEW_PAGE);
   pg_splitString(S_ERROR_BOX, &ERROR_BOX);
 
   return 0;
@@ -101,9 +107,12 @@ int pg_pageView(int stream_fd, const char *name, sqlite3 *db) {
 
   db_getFeed(db, name);
 
-  write_str(stream_fd, "<h1><span class=\"blue\">");
+  write_str(stream_fd, "<h1><a href=\"/\"><span class=\"blue\">");
   write_str(stream_fd, name);
-  write_str(stream_fd, "'s</span> Links </h1>");
+  write_str(stream_fd,
+            "'s</span> Links </a></h1><a class=\"RSS\" href=\"/feed/");
+  write_str(stream_fd, name);
+  write_str(stream_fd, "\"> RSS Feed </a><br/>");
 
   db_link link;
   while (db_stepGetFeed(db, &link) == 0) {
@@ -200,6 +209,23 @@ int pg_pageRedirect(int stream_fd, const char *url) {
   write(stream_fd, REDIRECT_PAGE.before, REDIRECT_PAGE.beforeLen);
   write_str(stream_fd, url);
   write(stream_fd, REDIRECT_PAGE.after, REDIRECT_PAGE.afterLen);
+  return 0;
+}
+
+int pg_pageNew(int stream_fd, const char *error) {
+  write(stream_fd, HTML_HEADER, sizeof(HTML_HEADER) - 1);
+  write(stream_fd, LAYOUT_PAGE.before, LAYOUT_PAGE.beforeLen);
+  write(stream_fd, NEW_PAGE.before, NEW_PAGE.beforeLen);
+
+  if (error != NULL) {
+    write(stream_fd, ERROR_BOX.before, ERROR_BOX.beforeLen);
+    write_str(stream_fd, error);
+    write(stream_fd, ERROR_BOX.after, ERROR_BOX.afterLen);
+  }
+
+  write(stream_fd, NEW_PAGE.after, NEW_PAGE.afterLen);
+  write(stream_fd, LAYOUT_PAGE.after, LAYOUT_PAGE.afterLen);
+
   return 0;
 }
 

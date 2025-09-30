@@ -23,6 +23,8 @@ int pg_pageFavicon(int stream_fd);
 
 int pg_pageRedirect(int stream_fd, const char *url);
 
+int pg_pageNew(int stream_fd, const char *error);
+
 int pg_parseForm(const char *response, const char *key1, const char **outVal1,
                  const char *key2, const char **outVal2, const char *key3,
                  const char **outVal3);
