@@ -78,6 +78,11 @@ int md_getMetadataFromResponse(const md_curlResponse *response,
   outMetadata->title = md_getInside(
       response->data, "<meta property=\"og:title\" content=\"", "\"");
   if (outMetadata->title == NULL) {
+    // Substack is weird
+    outMetadata->title = md_getInside(
+        response->data, "<meta data-rh=\"true\" property=\"og:title\" content=\"", "\"");
+  }
+  if (outMetadata->title == NULL) {
     outMetadata->title = md_getInside(
         response->data, "<meta name=\"twitter:title\" content=\"", "\"");
   }
@@ -93,6 +98,11 @@ int md_getMetadataFromResponse(const md_curlResponse *response,
   outMetadata->desc = md_getInside(
       response->data, "<meta property=\"og:description\" content=\"", "\"");
   if (outMetadata->desc == NULL) {
+    // Substack is weird
+    outMetadata->desc = md_getInside(
+        response->data, "<meta data-rh=\"true\" property=\"og:description\" content=\"", "\"");
+  }
+  if (outMetadata->desc == NULL) {
     outMetadata->desc = md_getInside(
         response->data, "<meta name=\"twitter:description\" content=\"", "\"");
   }
@@ -103,6 +113,11 @@ int md_getMetadataFromResponse(const md_curlResponse *response,
 
   outMetadata->image = md_getInside(
       response->data, "<meta property=\"og:image\" content=\"", "\"");
+  if (outMetadata->image == NULL) {
+    // Substack is weird
+    outMetadata->image = md_getInside(
+        response->data, "<meta data-rh=\"true\" property=\"og:image\" content=\"", "\"");
+  }
   if (outMetadata->image == NULL) {
     outMetadata->image = md_getInside(
         response->data, "<meta name=\"twitter:image\" content=\"", "\"");
